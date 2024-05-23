@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>"]
+build-backend = "setuptools.build_meta"
+
+[project]
+authors = [
+    {name = "Rodrigo Tenorio", email = "rodrigo.tenorio@ligo.org"},
+    {name = "Lorenzo Mirasola", email = "lorenzo.mirasola@ca.infn.it"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics"
+]
+dependencies = [
+    "lalsuite",
+    "numpy",
+    "scipy"
+]
+description = "Continuous-wave search sensitivity simulator"
+dynamic = ["version"]
+license = {file = "LICENSE.md"}
+name = "cows3"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = [
+    "black", 
+    "flake8", 
+    "pytest"
+]
+
+[project.urls]
+Homepage = "https://github.com/Rodrigo-Tenorio/cows3"
+Issues = "https://github.com/Rodrigo-Tenorio/cows3/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["cows3"]
+
+[tool.setuptools_scm]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "DEBUG"
+log_file_level = "DEBUG"
+
