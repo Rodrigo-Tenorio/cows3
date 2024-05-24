@@ -16,7 +16,8 @@ classifiers = [
 dependencies = [
     "lalsuite",
     "numpy",
-    "scipy"
+    "scipy",
+    "solar_system_ephemerides",
 ]
 description = "Continuous-wave search sensitivity simulator"
 dynamic = ["version"]
