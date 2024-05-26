@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cows3.detectorstates import get_multi_detector_states
+from cows3.detectorstates import MultiDetectorStates, extract_detector_velocities
 
 
 @pytest.fixture
@@ -30,9 +30,7 @@ def time_offset():
 
 
 def test_get_multi_detector_states(timestamps, Tsft, time_offset):
-    mds = get_multi_detector_states(
-        timestamps=timestamps, Tsft=Tsft, time_offset=time_offset
-    )
+    mds = MultiDetectorStates(timestamps=timestamps, Tsft=Tsft)(time_offset=time_offset)
 
     assert mds.length == len(timestamps)
     for ind, ifo in enumerate(timestamps):
@@ -46,6 +44,18 @@ def test_get_multi_detector_states(timestamps, Tsft, time_offset):
 
 def test_wrong_timestamps(wrong_timestamps, Tsft, time_offset):
     with pytest.raises(RuntimeError) as e_info:
-        mds = get_multi_detector_states(
-            timestamps=wrong_timestamps, Tsft=Tsft, time_offset=time_offset
+        mds = MultiDetectorStates(timestamps=wrong_timestamps, Tsft=Tsft)(
+            time_offset=time_offset
         )
+
+
+def test_extract_detector_velocities(timestamps, Tsft, time_offset):
+    mds = MultiDetectorStates(timestamps=timestamps, Tsft=Tsft)(time_offset=time_offset)
+    velocities = extract_detector_velocities(mds)
+
+    assert len(velocities) == len(timestamps)
+    assert all(key in velocities for key in timestamps)
+    for ifo_ind in range(len(timestamps)):
+        shape_to_test = velocities[mds.data[ifo_ind].detector.frDetector.prefix].shape
+        assert shape_to_test[0] == 3
+        assert shape_to_test[1] == mds.data[ifo_ind].length
