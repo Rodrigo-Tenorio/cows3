@@ -30,7 +30,9 @@ as well as a Zenodo release of this software.
 
 For the semi-analytical sensitivity estimation method you should also cite 
 [Wette (2012)](https://arxiv.org/abs/1111.5650) and
-[Dreissigacker, Prix, Wette (2018)](https://arxiv.org/abs/1808.02459).
+[Dreissigacker, Prix, Wette (2018)](https://arxiv.org/abs/1808.02459). Also,
+this package makes extensive use of SWIG bindings, so please cite
+[Wette (2021)](https://arxiv.org/abs/2012.09552) as well.
 
 
 ## Authors
