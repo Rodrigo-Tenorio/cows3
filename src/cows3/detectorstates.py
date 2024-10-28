@@ -4,43 +4,9 @@ import lal
 import lalpulsar
 import numpy as np
 
-from solar_system_ephemerides import body_ephemeris_path
+from .ephemeris import DEFAULT_EPHEMERIS
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_EPHEMERIS = lalpulsar.InitBarycenter(
-    str(body_ephemeris_path("earth")),
-    str(body_ephemeris_path("sun")),
-)
-
-
-def extract_detector_velocities(
-    multi_detector_states_series: lalpulsar.MultiDetectorStateSeries,
-) -> dict[str, np.ndarray]:
-    """
-    Extracts detector velocity vectors from a MultiDetetorStateSeries
-    into numpy arrays.
-
-    Parameters
-    ----------
-    multi_detector_states_series:
-        Self-explanatory
-
-    Returns
-    -------
-    velocities:
-        Dictionary. Keys refer to detector's 2-character prefix,
-        values are (3, num_timestamps) numpy arrays.
-    """
-    velocities = {}
-
-    for ifo_ind in range(multi_detector_states_series.length):
-        ifo_name = multi_detector_states_series.data[ifo_ind].detector.frDetector.prefix
-        velocities[ifo_name] = np.vstack(
-            [data.vDetector for data in multi_detector_states_series.data[ifo_ind].data]
-        ).T
-
-    return velocities
 
 
 class MultiDetectorStates:
@@ -63,10 +29,11 @@ class MultiDetectorStates:
             "L1": np.array([1, 2, 3, 4, 5])
         }
         ```
-    Tsft:
+    T_sft:
         Time period covered for each timestamp. Does not need to coincide
-        with the separation between consecutive timestamps.
-    time_offset:
+        with the separation between consecutive timestamps. It will be floored
+        using `int`.
+    t_offset:
         Time offset with respect to the timestamp at which the detector
         state will be retrieved. Defaults to LALSuite's behaviour.
     ephemeris:
@@ -76,20 +43,67 @@ class MultiDetectorStates:
     def __init__(
         self,
         timestamps: dict[str, np.array],
-        Tsft: int | float,
+        T_sft: int,
+        t_offset: int | None = None,
         ephemeris: lalpulsar.EphemerisData = DEFAULT_EPHEMERIS,
     ):
         self.timestamps = timestamps
-        self.Tsft = Tsft
+        self.T_sft = T_sft
+        self.t_offset = t_offset
         self.ephemeris = ephemeris
 
     @property
-    def timestamps(self) -> dict:
+    def Series(self) -> lalpulsar.MultiDetectorStateSeries:
+        """
+        Return lalpulsar.MultiDetectorStateSeries constructed using the instance's attributes.
+        """
+        return lalpulsar.GetMultiDetectorStates(
+            multiTS=self.multi_timestamps,
+            multiIFO=self.multi_lal_detector,
+            edat=self.ephemeris,
+            tOffset=self.t_offset,
+        )
+
+    @property
+    def velocities(self) -> dict[str, np.ndarray]:
+        """
+        Extracts detector velocity vectors into numpy arrays.
+
+        Returns
+        -------
+        velocities:
+            Dictionary. Keys refer to detector's 2-character prefix,
+            values are (3, num_timestamps) numpy arrays.
+        """
+
+        mdss = self.Series
+
+        velocities = {}
+
+        for ifo_ind in range(mdss.length):
+            ifo_name = mdss.data[
+                ifo_ind
+            ].detector.frDetector.prefix
+            velocities[ifo_name] = np.vstack(
+                [
+                    data.vDetector
+                    for data in mdss.data[ifo_ind].data
+                ]
+            ).T
+
+        return velocities
+
+    @property
+    def timestamps(self) -> dict[str, np.ndarray]:
         return self._timestamps
 
     @property
-    def Tsft(self) -> int | float:
-        return self._Tsft
+    def T_sft(self) -> int:
+        return self._T_sft
+
+    @property
+    def t_offset(self) -> int | float:
+        return self._t_offset
 
     @property
     def multi_lal_detector(self) -> lalpulsar.MultiLALDetector:
@@ -123,18 +137,12 @@ class MultiDetectorStates:
                     int(seconds_array[ts_ind]), int(nanoseconds_array[ts_ind])
                 )
 
-    @Tsft.setter
-    def Tsft(self, new_Tsft: int | float):
-        self._Tsft = new_Tsft
+    @T_sft.setter
+    def T_sft(self, new_T_sft: int):
+        self._T_sft = int(new_T_sft)
         for ifo_ind in range(self.multi_timestamps.length):
-            self._multi_timestamps.data[ifo_ind].deltaT = self._Tsft
+            self._multi_timestamps.data[ifo_ind].deltaT = self._T_sft
 
-    def __call__(
-        self, time_offset: float | None = None
-    ) -> lalpulsar.MultiDetectorStateSeries:
-        return lalpulsar.GetMultiDetectorStates(
-            multiTS=self.multi_timestamps,
-            multiIFO=self.multi_lal_detector,
-            edat=self.ephemeris,
-            tOffset=time_offset or 0.5 * self.Tsft,
-        )
+    @t_offset.setter
+    def t_offset(self, new_t_offset: int | None):
+        self._t_offset = new_t_offset if new_t_offset is not None else 0.5 * self.T_sft

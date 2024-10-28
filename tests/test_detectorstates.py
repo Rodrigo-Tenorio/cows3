@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cows3.detectorstates import MultiDetectorStates, extract_detector_velocities
+from cows3.detectorstates import MultiDetectorStates
 
 
 @pytest.fixture
@@ -30,32 +30,36 @@ def time_offset():
 
 
 def test_get_multi_detector_states(timestamps, Tsft, time_offset):
-    mds = MultiDetectorStates(timestamps=timestamps, Tsft=Tsft)(time_offset=time_offset)
+    mdss = MultiDetectorStates(
+        timestamps=timestamps, T_sft=Tsft, t_offset=time_offset
+    ).Series
 
-    assert mds.length == len(timestamps)
+    assert mdss.length == len(timestamps)
     for ind, ifo in enumerate(timestamps):
-        assert mds.data[ind].length == timestamps[ifo].size
-        assert mds.data[ind].detector.frDetector.prefix == ifo
-        assert mds.data[ind].deltaT == Tsft
+        assert mdss.data[ind].length == timestamps[ifo].size
+        assert mdss.data[ind].detector.frDetector.prefix == ifo
+        assert mdss.data[ind].deltaT == Tsft
 
-        for gps_ind in range(mds.data[ind].length):
-            mds.data[ind].data[gps_ind].tGPS.gpsSeconds == timestamps[ifo][gps_ind]
+        for gps_ind in range(mdss.data[ind].length):
+            mdss.data[ind].data[gps_ind].tGPS.gpsSeconds == timestamps[ifo][gps_ind]
 
 
 def test_wrong_timestamps(wrong_timestamps, Tsft, time_offset):
     with pytest.raises(RuntimeError) as e_info:
-        mds = MultiDetectorStates(timestamps=wrong_timestamps, Tsft=Tsft)(
-            time_offset=time_offset
+        mds = MultiDetectorStates(
+            timestamps=wrong_timestamps, T_sft=Tsft, t_offset=time_offset
         )
 
 
 def test_extract_detector_velocities(timestamps, Tsft, time_offset):
-    mds = MultiDetectorStates(timestamps=timestamps, Tsft=Tsft)(time_offset=time_offset)
-    velocities = extract_detector_velocities(mds)
+    mds = MultiDetectorStates(timestamps=timestamps, T_sft=Tsft, t_offset=time_offset)
+
+    velocities = mds.velocities
+    mdss = mds.Series
 
     assert len(velocities) == len(timestamps)
     assert all(key in velocities for key in timestamps)
     for ifo_ind in range(len(timestamps)):
-        shape_to_test = velocities[mds.data[ifo_ind].detector.frDetector.prefix].shape
+        shape_to_test = velocities[mdss.data[ifo_ind].detector.frDetector.prefix].shape
         assert shape_to_test[0] == 3
-        assert shape_to_test[1] == mds.data[ifo_ind].length
+        assert shape_to_test[1] == mdss.data[ifo_ind].length
