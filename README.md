@@ -1,4 +1,4 @@
-# Continuous-wave search sensitivity simulator (COWS3)
+# Continuous-wave search sensitivity simulator (cows3)
 
 [![PyPI version](https://badge.fury.io/py/cows3.svg)](https://badge.fury.io/py/cows3)
 [![arXiv](https://img.shields.io/badge/arXiv-2405.18934-b31b1b.svg)](https://arxiv.org/abs/2405.18934)
