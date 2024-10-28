@@ -1,5 +1,8 @@
 # Continuous-wave search sensitivity simulator (COWS3)
 
+[![PyPI version](https://badge.fury.io/py/cows3.svg)](https://badge.fury.io/py/cows3)
+[![arXiv](https://img.shields.io/badge/arXiv-2405.18934-b31b1b.svg)](https://arxiv.org/abs/2405.18934)
+
 A Python package to estimate the sensitivity of general
 continuous gravitational-wave searches.
 
@@ -8,9 +11,18 @@ The method should be equivalent to the semi-analytical approach derived in
 implemented in [Octapps](https://github.com/octapps/octapps), but here we 
 implement it in Python to make it more convenient to use.
 
+## How to install 
+
+`cows3` is available under PyPI:
+
+```
+pip install cows3
+```
+
+
 ## Citing this work
 
-If COWS3 was useful to your research, we would appreciate if you cited
+If `cows3` was useful to your research, we would appreciate if you cited
 [Mirasola & Tenorio (2024)](https://arxiv.org/abs/2405.18934) where this
 implementation was first presented:
 ```
