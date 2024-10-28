@@ -81,14 +81,9 @@ class MultiDetectorStates:
         velocities = {}
 
         for ifo_ind in range(mdss.length):
-            ifo_name = mdss.data[
-                ifo_ind
-            ].detector.frDetector.prefix
+            ifo_name = mdss.data[ifo_ind].detector.frDetector.prefix
             velocities[ifo_name] = np.vstack(
-                [
-                    data.vDetector
-                    for data in mdss.data[ifo_ind].data
-                ]
+                [data.vDetector for data in mdss.data[ifo_ind].data]
             ).T
 
         return velocities
