@@ -1,6 +1,8 @@
 # Continuous-wave search sensitivity simulator (cows3)
 [![DOI](https://zenodo.org/badge/DOI/10.1103/PhysRevD.110.124049.svg)](https://doi.org/10.1103/PhysRevD.110.124049)
 [![PyPI version](https://badge.fury.io/py/cows3.svg)](https://badge.fury.io/py/cows3)
+802506306
+[![DOI](https://zenodo.org/badge/802506306.svg)](https://zenodo.org/badge/latestdoi/802506306)
 [![arXiv](https://img.shields.io/badge/arXiv-2405.18934-b31b1b.svg)](https://arxiv.org/abs/2405.18934)
 
 A Python package to estimate the sensitivity of general
