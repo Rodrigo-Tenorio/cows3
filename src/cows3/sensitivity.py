@@ -30,9 +30,8 @@ def pfd_Fstatistic(
         PDF of the unitary-depth signal distribution. This is the
         ``geometric factor'' R in Dreissigacker+ arXiv:1808.024
     """
-    raise NotImplemented("There is a mistake in this formula. Will refactor")
-    cdf_2F_rho2 = stats.ncx2(df=4 * num_segments, nc=unitD_rho2_bins).cdf(
+    cdf_2F_rho2 = stats.ncx2(df=4 * num_segments, nc=unitD_rho2_bins / depth**2).cdf(
         twoF_threshold
     )
 
-    return integrate.simpson(y=unitD_rho2_pdf * cdf_2F_rho2, x=unitD_rho2_pdf)
+    return integrate.simpson(y=unitD_rho2_pdf * cdf_2F_rho2, x=unitD_rho2_bins)
