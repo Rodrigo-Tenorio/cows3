@@ -29,7 +29,7 @@ implementation was first presented:
 ```
 @article{Mirasola:2024lcq,
     author = "Mirasola, Lorenzo and Tenorio, Rodrigo",
-    title = "{Toward a computationa[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3967045.svg)](https://doi.org/10.5281/zenodo.3967045)lly efficient follow-up pipeline for blind continuous gravitational-wave searches}",
+    title = "{Toward a computationally efficient follow-up pipeline for blind continuous gravitational-wave searches}",
     eprint = "2405.18934",
     archivePrefix = "arXiv",
     primaryClass = "gr-qc",
