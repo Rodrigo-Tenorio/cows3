@@ -38,14 +38,15 @@ class SignalToNoiseRatio:
         Optional, incompatible with `assumeSqrtSX`.
         Can be computed from SFTs using `SignalToNoiseRatio.from_sfts`.
         Noise weights to account for a varying noise floor or unequal noise
-        floors in different detectors.
-    assumeSqrtSX: float
-        Optional, incompatible with `noise_weights`.
-        Single-sided amplitude spectral density (ASD) of the detector noise.
-        This value is used for all detectors, meaning it's not currently possible to manually
-        specify different noise floors without creating SFT files.
+        floors in different detectors. [Not yet implemented!]
         (To be improved in the future; developer note:
         will require SWIG constructor for MultiNoiseWeights.)
+    assumeSqrtSX: Union[floar, array/list of floats]
+        Optional, incompatible with `noise_weights`.
+        Single-sided amplitude spectral density (ASD) of the per-detector noise.
+        If float, the value is used for all detectors.
+        If array, each value will be used to calculate the single-detector snr,
+        the network snr will be obtained through their squared sum
 
     This code is a subset of that under `snr.py` in [PyFstat](https://github.com/PyFstat/PyFstat).
 
@@ -55,12 +56,13 @@ class SignalToNoiseRatio:
         self,
         mdss: lalpulsar.MultiDetectorStateSeries,
         noise_weights: lalpulsar.MultiNoiseWeights | None = None,
-        assumeSqrtSX: float | None = None,
+        assumeSqrtSX: float | np.ndarray | list | None = None,
     ):
 
         self.mdss = mdss
         self.noise_weights = noise_weights
-        self.assumeSqrtSX = assumeSqrtSX
+        if isinstance(self.assumeSqrtSX, list): self.assumeSqrtSX = np.array(assumeSqrtSX)
+        else: self.assumeSqrtSX = assumeSqrtSX
 
     @property
     def mdss(self) -> lalpulsar.MultiDetectorStateSeries:
@@ -148,11 +150,19 @@ class SignalToNoiseRatio:
         Aphys.aPlus = aPlus
         Aphys.aCross = aCross
 
-        M = self.compute_Mmunu(Alpha=Alpha, Delta=Delta)
+        if isinstance(self.assumeSqrtSX, np.ndarray) or isinstance(self.assumeSqrtSX, list):
+            rho2 = 0
+            for idet in range(len(self.assumeSqrtSX)):
+                M = self.compute_Mmunu(Alpha=Alpha, Delta=Delta, idetector = idet)
+                rho2 += lalpulsar.ComputeOptimalSNR2FromMmunu(Aphys, M)
 
-        return lalpulsar.ComputeOptimalSNR2FromMmunu(Aphys, M)
+        else: 
+            M = self.compute_Mmunu(Alpha=Alpha, Delta=Delta)
+            rho2 = lalpulsar.ComputeOptimalSNR2FromMmunu(Aphys, M)
 
-    def compute_Mmunu(self, Alpha: float, Delta: float) -> float:
+        return rho2
+
+    def compute_Mmunu(self, Alpha: float, Delta: float, idetector: int | None = None) -> float:
         """
         Compute Mmunu matrix at a specific sky position using the detector states
         (and possible noise weights) given at initialization time.
@@ -164,7 +174,9 @@ class SignalToNoiseRatio:
             Right ascension (equatorial longitude) of the signal in radians.
         Delta: float
             Declination (equatorial latitude) of the signal in radians.
-
+        multidetector: int or None
+            Index of the analyzed detector. Used only if the per-detector PSD is not the same
+         
         Returns
         -------
         Mmunu: lalpulsar.AntennaPatternMatrix
@@ -178,13 +190,19 @@ class SignalToNoiseRatio:
         sky.system = lal.COORDINATESYSTEM_EQUATORIAL
         lal.NormalizeSkyPosition(sky.longitude, sky.latitude)
 
+        mdss = self.mdss
+        if idetector is not None: mdss = self.mdss[idetector]
+
         Mmunu = lalpulsar.ComputeMultiAMCoeffs(
-            multiDetStates=self.mdss,
+            multiDetStates=mdss,
             multiWeights=self.noise_weights,
             skypos=sky,
         ).Mmunu
 
         if self.noise_weights is None:
-            Mmunu.Sinv_Tsft = self._Sinv_Tsft
+            if idetector is not None:
+                Mmunu.Sinv_Tsft = self._Sinv_Tsft[idetector]
+            else:
+                Mmunu.Sinv_Tsft = self._Sinv_Tsft
 
         return Mmunu
