@@ -91,7 +91,12 @@ class SignalToNoiseRatio:
         self._Sinv_Tsft = None
 
     @assumeSqrtSX.setter
-    def assumeSqrtSX(self, new_sqrtSX: float):
+    def assumeSqrtSX(self, new_sqrtSX: float | None):
+        if new_sqrtSX is None:
+            self._assumeSqrtSX = None
+            self._Sinv_Tsft = None
+            return
+
         if getattr(self, "noise_weights", None) is not None:
             raise ValueError(
                 "Cannot set `assumeSqrtSX' if `noise_weights` is already set!"
