@@ -32,6 +32,9 @@ dev = [
     "flake8", 
     "pytest"
 ]
+examples = [
+    "matplotlib"
+]
 
 [project.urls]
 Homepage = "https://github.com/Rodrigo-Tenorio/cows3"
