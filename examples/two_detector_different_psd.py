@@ -13,10 +13,6 @@ This example demonstrates the use of cows3 to:
 The sensitivity estimation follows Sec. II.3 of Mirasola & Tenorio (2024),
 arXiv:2405.18934, Phys. Rev. D 110, 124049.
 
-NOTE: This example concerns *continuous-wave* F-statistic sensitivity.
-It does NOT implement stochastic-background cross-correlation or
-overlap-reduction-function analyses.
-
 Usage:
     python two_detector_different_psd.py
     python two_detector_different_psd.py --sqrtSX 1e-23 1.5e-23 --nsamples 1000
@@ -48,15 +44,15 @@ def draw_isotropic_population(nsamples, rng):
     }
 
 
-def compute_unitD_rho2_distribution(snr_calc, population, Sn_ref):
+def compute_unit_depth_rho2_distribution(snr_calc, population, Sn_ref):
     """Compute unit-depth SNR^2 for each source in the population.
 
-    At unit depth (D = 1), h0 = sqrt(Sn_ref).  We set amplitudes
-    accordingly and compute SNR^2 directly.
+    At unit depth (D = 1), h0 = sqrt(Sn_ref). We set amplitudes accordingly and
+    compute SNR^2 directly.
     """
     h0_unit = np.sqrt(Sn_ref)
-    nsamples = len(population["Alpha"])
-    rho02 = np.empty(nsamples)
+    nsamples = population["Alpha"].size
+    rho02 = np.empty(nsamples, dtype=float)
 
     for ii in range(nsamples):
         cosi = population["cosi"][ii]
@@ -151,17 +147,38 @@ def build_parser():
     return parser
 
 
+def validate_args(args):
+    if args.nsamples <= 0:
+        raise ValueError("--nsamples must be positive.")
+    if args.Tsft <= 0:
+        raise ValueError("--Tsft must be positive.")
+    if args.Tobs <= 0:
+        raise ValueError("--Tobs must be positive.")
+    if args.Tcoh <= 0:
+        raise ValueError("--Tcoh must be positive.")
+    if args.hist_bins <= 0:
+        raise ValueError("--hist-bins must be positive.")
+    if args.twoF_threshold <= 0:
+        raise ValueError("--twoF-threshold must be positive.")
+    if np.any(np.asarray(args.sqrtSX, dtype=float) <= 0):
+        raise ValueError("--sqrtSX must contain positive values.")
+    if np.any(np.asarray(args.depths, dtype=float) <= 0):
+        raise ValueError("--depths must contain positive values.")
+
+
 def main():
     args = build_parser().parse_args()
-    sqrtSX_H1, sqrtSX_L1 = args.sqrtSX
+    validate_args(args)
+
+    sqrtSX_H1, sqrtSX_L1 = map(float, args.sqrtSX)
     rng = np.random.default_rng(args.seed)
 
     # --- Setup ---
-    Tobs_s = args.Tobs * 86400  # days -> seconds
+    Tobs_s = float(args.Tobs) * 86400.0  # days -> seconds
     tstart = 1_238_166_018  # GPS start (O3 epoch)
-    timestamps_array = np.arange(tstart, tstart + Tobs_s, args.Tsft)
+    timestamps_array = np.arange(tstart, tstart + Tobs_s, args.Tsft, dtype=np.int64)
 
-    num_segments = int(args.Tobs / args.Tcoh)
+    num_segments = max(1, int(round(args.Tobs / args.Tcoh)))
 
     print(f"Detectors: H1 (sqrtSX={sqrtSX_H1:.2e}), L1 (sqrtSX={sqrtSX_L1:.2e})")
     print(f"Tobs = {args.Tobs} d, Tsft = {args.Tsft} s, Tcoh = {args.Tcoh} d")
@@ -189,7 +206,7 @@ def main():
 
     # --- Compute unit-depth SNR^2 distribution ---
     population = draw_isotropic_population(args.nsamples, rng)
-    rho02 = compute_unitD_rho2_distribution(snr_calc, population, Sn_ref)
+    rho02 = compute_unit_depth_rho2_distribution(snr_calc, population, Sn_ref)
     print(f"rho0^2 range: [{rho02.min():.2f}, {rho02.max():.2f}]")
     print(f"rho0^2 median: {np.median(rho02):.2f}")
 
