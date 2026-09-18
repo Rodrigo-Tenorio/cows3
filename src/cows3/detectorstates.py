@@ -46,11 +46,14 @@ class MultiDetectorStates:
         T_sft: int,
         t_offset: int | None = None,
         ephemeris: lalpulsar.EphemerisData = DEFAULT_EPHEMERIS,
+        custom_ifos: dict | None = None,
     ):
+        self.custom_ifos = custom_ifos
         self.timestamps = timestamps
         self.T_sft = T_sft
         self.t_offset = t_offset
         self.ephemeris = ephemeris
+        
 
     @property
     def Series(self) -> lalpulsar.MultiDetectorStateSeries:
@@ -108,10 +111,38 @@ class MultiDetectorStates:
     def multi_timestamps(self) -> lalpulsar.MultiLIGOTimeGPSVector:
         return self._multi_timestamps
 
+    def create_ifo_structure(self):
+        ifos = [*self._timestamps]
+        for ifo in ifos:
+            try: 
+                print(f"Checking if detector {ifo} already exists in lal...")
+                lalpulsar.FindCWDetector(ifo, True) #check if the detector is already there, otherwise create the new entry
+            except RuntimeError:
+                print("Detector is not there, creating a new one with the given parameters, please ignore previous printed errors...")
+                lal_detector = lal.FrDetector()
+                lal_detector.name = self.custom_ifos[ifo]["name"]
+                lal_detector.prefix = ifo
+            
+                lal_detector.vertexLatitudeRadians = self.custom_ifos[ifo]["latitude_rad"]
+                lal_detector.vertexLongitudeRadians = self.custom_ifos[ifo]["longitude_rad"]
+            
+                lal_detector.vertexElevation = self.custom_ifos[ifo]["elevation_m"]
+            
+                lal_detector.xArmAzimuthRadians = self.custom_ifos[ifo]["xarm_azimuth_rad"]
+                lal_detector.yArmAzimuthRadians = self.custom_ifos[ifo]["yarm_azimuth_rad"]
+                lal_detector.xArmAltitudeRadians = self.custom_ifos[ifo]["xarm_alt_rad"]
+                lal_detector.yArmAltitudeRadians = self.custom_ifos[ifo]["yarm_alt_rad"]
+
+                det = lal.CreateDetector(None, lal_detector, lal.LALDETECTORTYPE_IFODIFF)
+                lalpulsar.RegisterSpecialCWDetector(det)
+                print()
+
     @timestamps.setter
     def timestamps(self, new_timestamps: dict):
 
         self._timestamps = new_timestamps
+
+        if self.custom_ifos is not None: self.create_ifo_structure()
 
         self._multi_lal_detector = lalpulsar.MultiLALDetector()
         lalpulsar.ParseMultiLALDetector(self._multi_lal_detector, [*self._timestamps])
