@@ -14,9 +14,9 @@ The sensitivity estimation follows Sec. II.3 of Mirasola & Tenorio (2024),
 arXiv:2405.18934, Phys. Rev. D 110, 124049.
 
 Usage:
-    python two_detector_different_psd.py
-    python two_detector_different_psd.py --sqrtSX 1e-23 1.5e-23 --nsamples 1000
-    python two_detector_different_psd.py --save-plot snr2_histogram.png --no-show-plot
+    python custom_detector.py
+    python custom_detector.py --sqrtSX 1e-23 1.5e-23 --nsamples 1000
+    python custom_detector.py --save-plot snr2_histogram.png --no-show-plot
 """
 
 import argparse
