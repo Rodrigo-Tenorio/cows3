@@ -74,6 +74,23 @@ class SignalToNoiseRatio:
     def assumeSqrtSX(self) -> float | None:
         return self._assumeSqrtSX
 
+    @property
+    def effective_PSD(self) -> float:
+        """Effective PSD implied by the current noise model.
+
+        Returns
+        -------
+        float
+            Reference single-sided PSD in Hz^-1.
+        """
+        if self.noise_weights is not None:
+            return self._T_sft / self.noise_weights.Sinv_Tsft
+
+        if self.assumeSqrtSX is not None:
+            return self.assumeSqrtSX**2
+
+        raise ValueError("SignalToNoiseRatio has neither noise_weights nor assumeSqrtSX set.")
+
     @mdss.setter
     def mdss(self, new_mdss: lalpulsar.MultiDetectorStateSeries):
         self._mdss = new_mdss
