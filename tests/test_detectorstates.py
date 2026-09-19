@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
+import lalpulsar
 
-from cows3.detectorstates import MultiDetectorStates
+from cows3.detectorstates import CustomIFO, MultiDetectorStates
 
 
 @pytest.fixture
@@ -63,3 +64,31 @@ def test_extract_detector_velocities(timestamps, Tsft, time_offset):
         shape_to_test = velocities[mdss.data[ifo_ind].detector.frDetector.prefix].shape
         assert shape_to_test[0] == 3
         assert shape_to_test[1] == mdss.data[ifo_ind].length
+
+
+def test_customifo_x0_matches_h1_velocities(Tsft, time_offset):
+    source = lalpulsar.GetSiteInfo("H1")
+
+    CustomIFO(
+        name="X0_H1_clone",
+        prefix="X0",
+        latitude_rad=source.frDetector.vertexLatitudeRadians,
+        longitude_rad=source.frDetector.vertexLongitudeRadians,
+        elevation_m=source.frDetector.vertexElevation,
+        xarm_azimuth_rad=source.frDetector.xArmAzimuthRadians,
+        yarm_azimuth_rad=source.frDetector.yArmAzimuthRadians,
+        xarm_alt_rad=source.frDetector.xArmAltitudeRadians,
+        yarm_alt_rad=source.frDetector.yArmAltitudeRadians,
+        detector_type=source.type,
+    )
+
+    ts = 1238166018 + np.arange(0, 10, 2)
+    mds = MultiDetectorStates(
+        timestamps={"H1": ts, "X0": ts},
+        T_sft=Tsft,
+        t_offset=time_offset,
+    )
+
+    assert "H1" in mds.velocities
+    assert "X0" in mds.velocities
+    assert mds.velocities["X0"] == pytest.approx(mds.velocities["H1"])
