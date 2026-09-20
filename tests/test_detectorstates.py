@@ -80,7 +80,7 @@ def test_customifo_x0_matches_h1_velocities(Tsft, time_offset):
         yArmAzimuthRadians=source.frDetector.yArmAzimuthRadians,
         xArmAltitudeRadians=source.frDetector.xArmAltitudeRadians,
         yArmAltitudeRadians=source.frDetector.yArmAltitudeRadians,
-        type=source.type,
+        LALDetectorType=source.type,
     )
 
     ts = 1238166018 + np.arange(0, 10, 2)
@@ -115,7 +115,7 @@ def imported_customifo_module(tmp_path):
                 "    yArmAzimuthRadians=source.frDetector.yArmAzimuthRadians,",
                 "    xArmAltitudeRadians=source.frDetector.xArmAltitudeRadians,",
                 "    yArmAltitudeRadians=source.frDetector.yArmAltitudeRadians,",
-                "    type=source.type,",
+                "    LALDetectorType=source.type,",
                 ")",
             ]
         )

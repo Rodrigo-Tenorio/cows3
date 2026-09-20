@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class CustomIFO:
     """Register a custom interferometer in LALSuite when instantiated.
 
-        Parameters map directly to ``lal.FrDetector`` fields, except ``type``
-        which is passed to ``lal.CreateDetector``:
+        Parameters map directly to ``lal.FrDetector`` fields, except
+        ``LALDetectorType`` which is passed to ``lal.CreateDetector``:
 
         - ``name``: detector name string.
         - ``prefix``: 2-character detector prefix for CW naming.
@@ -29,7 +29,7 @@ class CustomIFO:
             measured upward from local tangent plane.
         - ``xArmMidpoint`` / ``yArmMidpoint``: distance from vertex to arm
             midpoint in meters (for a 10 km arm, use 5000 m).
-        - ``type``: one of LAL's ``LALDETECTORTYPE_*`` constants.
+        - ``LALDetectorType``: one of LAL's ``LALDETECTORTYPE_*`` constants.
 
     Notes
     -----
@@ -49,7 +49,7 @@ class CustomIFO:
     yArmAltitudeRadians: float
     xArmMidpoint: float = 0.0
     yArmMidpoint: float = 0.0
-    type: int = lal.LALDETECTORTYPE_IFODIFF
+    LALDetectorType: int = lal.LALDETECTORTYPE_IFODIFF
 
     def __post_init__(self):
         if not re.fullmatch(r"[XYZ][0-9]", self.prefix):
@@ -71,7 +71,7 @@ class CustomIFO:
         fr_detector.yArmMidpoint = self.yArmMidpoint
 
         # Geometry/consistency checks beyond naming and enum selection are delegated to LAL.
-        detector = lal.CreateDetector(None, fr_detector, self.type)
+        detector = lal.CreateDetector(None, fr_detector, self.LALDetectorType)
         lalpulsar.RegisterSpecialCWDetector(detector)
 
 
@@ -122,7 +122,6 @@ class MultiDetectorStates:
         self.T_sft = T_sft
         self.t_offset = t_offset
         self.ephemeris = ephemeris
-        
 
     @property
     def Series(self) -> lalpulsar.MultiDetectorStateSeries:
