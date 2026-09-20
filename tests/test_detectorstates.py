@@ -1,3 +1,4 @@
+import importlib.util
 import pytest
 import numpy as np
 import lalpulsar
@@ -72,14 +73,14 @@ def test_customifo_x0_matches_h1_velocities(Tsft, time_offset):
     CustomIFO(
         name="X0_H1_clone",
         prefix="X0",
-        latitude_rad=source.frDetector.vertexLatitudeRadians,
-        longitude_rad=source.frDetector.vertexLongitudeRadians,
-        elevation_m=source.frDetector.vertexElevation,
-        xarm_azimuth_rad=source.frDetector.xArmAzimuthRadians,
-        yarm_azimuth_rad=source.frDetector.yArmAzimuthRadians,
-        xarm_alt_rad=source.frDetector.xArmAltitudeRadians,
-        yarm_alt_rad=source.frDetector.yArmAltitudeRadians,
-        detector_type=source.type,
+        vertexLatitudeRadians=source.frDetector.vertexLatitudeRadians,
+        vertexLongitudeRadians=source.frDetector.vertexLongitudeRadians,
+        vertexElevation=source.frDetector.vertexElevation,
+        xArmAzimuthRadians=source.frDetector.xArmAzimuthRadians,
+        yArmAzimuthRadians=source.frDetector.yArmAzimuthRadians,
+        xArmAltitudeRadians=source.frDetector.xArmAltitudeRadians,
+        yArmAltitudeRadians=source.frDetector.yArmAltitudeRadians,
+        type=source.type,
     )
 
     ts = 1238166018 + np.arange(0, 10, 2)
@@ -92,3 +93,52 @@ def test_customifo_x0_matches_h1_velocities(Tsft, time_offset):
     assert "H1" in mds.velocities
     assert "X0" in mds.velocities
     assert mds.velocities["X0"] == pytest.approx(mds.velocities["H1"])
+
+
+@pytest.fixture
+def imported_customifo_module(tmp_path):
+    module_path = tmp_path / "custom_ifo_module.py"
+    module_path.write_text(
+        "\n".join(
+            [
+                "import lalpulsar",
+                "from cows3.detectorstates import CustomIFO",
+                "",
+                'source = lalpulsar.GetSiteInfo("H1")',
+                "IMPORTED_IFO = CustomIFO(",
+                '    name="X1_H1_clone",',
+                '    prefix="X1",',
+                "    vertexLatitudeRadians=source.frDetector.vertexLatitudeRadians,",
+                "    vertexLongitudeRadians=source.frDetector.vertexLongitudeRadians,",
+                "    vertexElevation=source.frDetector.vertexElevation,",
+                "    xArmAzimuthRadians=source.frDetector.xArmAzimuthRadians,",
+                "    yArmAzimuthRadians=source.frDetector.yArmAzimuthRadians,",
+                "    xArmAltitudeRadians=source.frDetector.xArmAltitudeRadians,",
+                "    yArmAltitudeRadians=source.frDetector.yArmAltitudeRadians,",
+                "    type=source.type,",
+                ")",
+            ]
+        )
+    )
+    return module_path
+
+
+def test_imported_customifo_is_available_to_detectorstates(
+    imported_customifo_module, Tsft, time_offset, monkeypatch
+):
+    spec = importlib.util.spec_from_file_location(
+        "tests.custom_ifo_module", imported_customifo_module
+    )
+    module = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(__import__("sys").modules, spec.name, module)
+    spec.loader.exec_module(module)
+
+    ts = 1238166018 + np.arange(0, 10, 2)
+    mds = MultiDetectorStates(
+        timestamps={"X1": ts},
+        T_sft=Tsft,
+        t_offset=time_offset,
+    )
+
+    assert module.IMPORTED_IFO.prefix == "X1"
+    assert mds.Series.data[0].detector.frDetector.prefix == "X1"

@@ -54,15 +54,15 @@ def draw_unit_depth_rho2_from_isotropic_population(snr_calc, rng):
 CustomIFO(
     name="PB_10k",
     prefix="X0",
-    latitude_rad=0.6917714301152558,
-    longitude_rad=0.04596276103758956,
-    elevation_m=0.0,
-    xarm_azimuth_rad=1.406102938164868,
-    yarm_azimuth_rad=6.118491918549558,
-    xarm_alt_rad=0.0,
-    yarm_alt_rad=0.0,
-    xarm_midpoint_m=5000.0,
-    yarm_midpoint_m=5000.0,
+    vertexLatitudeRadians=0.6917714301152558,
+    vertexLongitudeRadians=0.04596276103758956,
+    vertexElevation=0.0,
+    xArmAzimuthRadians=1.406102938164868,
+    yArmAzimuthRadians=6.118491918549558,
+    xArmAltitudeRadians=0.0,
+    yArmAltitudeRadians=0.0,
+    xArmMidpoint=5000.0,
+    yArmMidpoint=5000.0,
 )
 
 

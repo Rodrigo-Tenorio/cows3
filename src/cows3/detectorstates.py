@@ -15,19 +15,21 @@ logger = logging.getLogger(__name__)
 class CustomIFO:
     """Register a custom interferometer in LALSuite when instantiated.
 
-        Parameters map directly to ``lal.FrDetector`` fields:
+        Parameters map directly to ``lal.FrDetector`` fields, except ``type``
+        which is passed to ``lal.CreateDetector``:
 
         - ``name``: detector name string.
         - ``prefix``: 2-character detector prefix for CW naming.
-        - ``latitude_rad`` / ``longitude_rad``: geodetic coordinates in radians.
-        - ``elevation_m``: height above reference ellipsoid in meters.
-        - ``xarm_azimuth_rad`` / ``yarm_azimuth_rad``: arm azimuths in radians,
+        - ``vertexLatitudeRadians`` / ``vertexLongitudeRadians``: geodetic
+            coordinates in radians.
+        - ``vertexElevation``: height above reference ellipsoid in meters.
+        - ``xArmAzimuthRadians`` / ``yArmAzimuthRadians``: arm azimuths in radians,
             clockwise from North.
-        - ``xarm_alt_rad`` / ``yarm_alt_rad``: arm altitude angles in radians,
+        - ``xArmAltitudeRadians`` / ``yArmAltitudeRadians``: arm altitude angles in radians,
             measured upward from local tangent plane.
-        - ``xarm_midpoint_m`` / ``yarm_midpoint_m``: distance from vertex to arm
+        - ``xArmMidpoint`` / ``yArmMidpoint``: distance from vertex to arm
             midpoint in meters (for a 10 km arm, use 5000 m).
-        - ``detector_type``: one of LAL's ``LALDETECTORTYPE_*`` constants.
+        - ``type``: one of LAL's ``LALDETECTORTYPE_*`` constants.
 
     Notes
     -----
@@ -38,16 +40,16 @@ class CustomIFO:
 
     name: str
     prefix: str
-    latitude_rad: float
-    longitude_rad: float
-    elevation_m: float
-    xarm_azimuth_rad: float
-    yarm_azimuth_rad: float
-    xarm_alt_rad: float
-    yarm_alt_rad: float
-    xarm_midpoint_m: float = 0.0
-    yarm_midpoint_m: float = 0.0
-    detector_type: int = lal.LALDETECTORTYPE_IFODIFF
+    vertexLatitudeRadians: float
+    vertexLongitudeRadians: float
+    vertexElevation: float
+    xArmAzimuthRadians: float
+    yArmAzimuthRadians: float
+    xArmAltitudeRadians: float
+    yArmAltitudeRadians: float
+    xArmMidpoint: float = 0.0
+    yArmMidpoint: float = 0.0
+    type: int = lal.LALDETECTORTYPE_IFODIFF
 
     def __post_init__(self):
         if not re.fullmatch(r"[XYZ][0-9]", self.prefix):
@@ -58,18 +60,18 @@ class CustomIFO:
         fr_detector = lal.FrDetector()
         fr_detector.name = self.name
         fr_detector.prefix = self.prefix
-        fr_detector.vertexLatitudeRadians = self.latitude_rad
-        fr_detector.vertexLongitudeRadians = self.longitude_rad
-        fr_detector.vertexElevation = self.elevation_m
-        fr_detector.xArmAzimuthRadians = self.xarm_azimuth_rad
-        fr_detector.yArmAzimuthRadians = self.yarm_azimuth_rad
-        fr_detector.xArmAltitudeRadians = self.xarm_alt_rad
-        fr_detector.yArmAltitudeRadians = self.yarm_alt_rad
-        fr_detector.xArmMidpoint = self.xarm_midpoint_m
-        fr_detector.yArmMidpoint = self.yarm_midpoint_m
+        fr_detector.vertexLatitudeRadians = self.vertexLatitudeRadians
+        fr_detector.vertexLongitudeRadians = self.vertexLongitudeRadians
+        fr_detector.vertexElevation = self.vertexElevation
+        fr_detector.xArmAzimuthRadians = self.xArmAzimuthRadians
+        fr_detector.yArmAzimuthRadians = self.yArmAzimuthRadians
+        fr_detector.xArmAltitudeRadians = self.xArmAltitudeRadians
+        fr_detector.yArmAltitudeRadians = self.yArmAltitudeRadians
+        fr_detector.xArmMidpoint = self.xArmMidpoint
+        fr_detector.yArmMidpoint = self.yArmMidpoint
 
         # Geometry/consistency checks beyond naming and enum selection are delegated to LAL.
-        detector = lal.CreateDetector(None, fr_detector, self.detector_type)
+        detector = lal.CreateDetector(None, fr_detector, self.type)
         lalpulsar.RegisterSpecialCWDetector(detector)
 
 
