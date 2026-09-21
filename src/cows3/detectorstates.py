@@ -1,4 +1,6 @@
 import logging
+import re
+from dataclasses import dataclass
 
 import lal
 import lalpulsar
@@ -7,6 +9,70 @@ import numpy as np
 from .ephemeris import DEFAULT_EPHEMERIS
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CustomIFO:
+    """Register a custom interferometer in LALSuite when instantiated.
+
+        Parameters map directly to ``lal.FrDetector`` fields, except
+        ``LALDetectorType`` which is passed to ``lal.CreateDetector``:
+
+        - ``name``: detector name string.
+        - ``prefix``: 2-character detector prefix for CW naming.
+        - ``vertexLatitudeRadians`` / ``vertexLongitudeRadians``: geodetic
+            coordinates in radians.
+        - ``vertexElevation``: height above reference ellipsoid in meters.
+        - ``xArmAzimuthRadians`` / ``yArmAzimuthRadians``: arm azimuths in radians,
+            clockwise from North.
+        - ``xArmAltitudeRadians`` / ``yArmAltitudeRadians``: arm altitude angles in radians,
+            measured upward from local tangent plane.
+        - ``xArmMidpoint`` / ``yArmMidpoint``: distance from vertex to arm
+            midpoint in meters (for a 10 km arm, use 5000 m).
+        - ``LALDetectorType``: one of LAL's ``LALDETECTORTYPE_*`` constants.
+
+    Notes
+    -----
+    For CW codes, the detector prefix is validated by LALPulsar's
+    special-detector registry and must follow the pattern [XYZ][0-9]
+    (for example X0, X2, Y1, Z9).
+    """
+
+    name: str
+    prefix: str
+    vertexLatitudeRadians: float
+    vertexLongitudeRadians: float
+    vertexElevation: float
+    xArmAzimuthRadians: float
+    yArmAzimuthRadians: float
+    xArmAltitudeRadians: float
+    yArmAltitudeRadians: float
+    xArmMidpoint: float = 0.0
+    yArmMidpoint: float = 0.0
+    LALDetectorType: int = lal.LALDETECTORTYPE_IFODIFF
+
+    def __post_init__(self):
+        if not re.fullmatch(r"[XYZ][0-9]", self.prefix):
+            raise ValueError(
+                "CustomIFO.prefix must match [XYZ][0-9] for special CW detectors."
+            )
+
+        fr_detector = lal.FrDetector()
+        fr_detector.name = self.name
+        fr_detector.prefix = self.prefix
+        fr_detector.vertexLatitudeRadians = self.vertexLatitudeRadians
+        fr_detector.vertexLongitudeRadians = self.vertexLongitudeRadians
+        fr_detector.vertexElevation = self.vertexElevation
+        fr_detector.xArmAzimuthRadians = self.xArmAzimuthRadians
+        fr_detector.yArmAzimuthRadians = self.yArmAzimuthRadians
+        fr_detector.xArmAltitudeRadians = self.xArmAltitudeRadians
+        fr_detector.yArmAltitudeRadians = self.yArmAltitudeRadians
+        fr_detector.xArmMidpoint = self.xArmMidpoint
+        fr_detector.yArmMidpoint = self.yArmMidpoint
+
+        # Geometry/consistency checks beyond naming and enum selection are delegated to LAL.
+        detector = lal.CreateDetector(None, fr_detector, self.LALDetectorType)
+        lalpulsar.RegisterSpecialCWDetector(detector)
 
 
 class MultiDetectorStates:
@@ -38,6 +104,11 @@ class MultiDetectorStates:
         state will be retrieved. Defaults to LALSuite's behaviour.
     ephemeris:
         Default uses `solar_system_ephemerides` to get lalsuite's default.
+
+    Notes
+    -----
+    Custom detectors should be registered in advance by instantiating
+    ``CustomIFO`` with the desired detector definition.
     """
 
     def __init__(

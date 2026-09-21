@@ -55,7 +55,7 @@ this package makes extensive use of SWIG bindings, so please cite
 ## Quick example
 
 The `examples/` directory contains a runnable script that estimates
-CW sensitivity for two detectors (H1, L1) with different noise levels.
+CW sensitivity for three detectors: H1, L1, and a custom PB_10k detector.
 
 ```bash
 pip install cows3[examples]  # adds matplotlib
@@ -65,19 +65,11 @@ python examples/two_detector_different_psd.py
 The script draws an isotropic population of CW sources, computes the
 unit-depth SNR² distribution, and evaluates the false-dismissal
 probability at selected sensitivity depths (Sec. II.3 of
-[arXiv:2405.18934](https://arxiv.org/abs/2405.18934)).
-Outputs include a matplotlib histogram of the SNR² distribution and a
-table of p_fd values.
+[arXiv:2405.18934](https://arxiv.org/abs/2405.18934)). It also saves a
+histogram of the SNR² distribution to `result.pdf`.
 
-Useful options:
-
-| Flag | Purpose |
-|------|--------|
-| `--sqrtSX 1e-23 1.5e-23` | Set per-detector ASDs |
-| `--nsamples 1000` | More draws for smoother histogram |
-| `--depths 20 30 50` | Sensitivity depths to evaluate |
-| `--save-plot fig.png` | Save histogram to file |
-| `--no-show-plot` | Headless / CI-friendly mode |
+To experiment with the setup, edit the detector noise levels, observation
+time, and sensitivity depths directly in the script.
 
 > **Note:** This example concerns *continuous-wave* F-statistic
 > sensitivity. It does **not** implement stochastic-background
